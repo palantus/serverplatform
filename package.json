@@ -1,0 +1,17 @@
+{
+	"name": "ServerPlatform",
+	"version": "1.0.0",
+	"scripts": {
+		"install-windows-service": "winser -i",
+		"uninstall-windows-service": "winser -r"
+	},
+	"dependencies" : {
+		"connect" : "*",
+		"crypto" : "*",
+		"moment" : "*",
+		"events" : "*",
+		"body-parser" : "*",
+		"serve-static" : "*",
+		"url" : "*"
+	}
+}
