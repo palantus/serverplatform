@@ -112,7 +112,7 @@ eve.on('server_started',function(){
 });
 
 function startServer(){
-	app.listen(process.env.port || 3000);
+	app.listen(process.env.port || framework.config.port || 3000);
 	eve.emit("server_started");
 	
 	for(moduleName in framework.modules)
