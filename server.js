@@ -27,6 +27,7 @@ var framework = new Framework();
 
 framework.config.www = framework.config.www !== undefined ? framework.config.www : "../www";
 framework.config.modules = framework.config.modules !== undefined ? framework.config.modules : "../modules";
+framework.config.moduleprefix = framework.config.moduleprefix !== undefined ? framework.config.moduleprefix : "";
 
 String.prototype.endsWith = function(suffix) {
     return this.indexOf(suffix, this.length - suffix.length) !== -1;
@@ -65,11 +66,22 @@ eve.on('server_created',function(){
 	fs.readdir(framework.config.modules + '/',function(err,files){
 		if(err) throw err;
 		files.forEach(function(file){
-		
-			var config = require(framework.config.modules + "/" + file + "/module.json");
-			if(!config.disabled === true && typeof(config.main) === "string"){
-				var Mod = require(framework.config.modules + "/" + file + "/" + config.main);
-				framework.modules[file] = new Mod();
+			var configFile = framework.config.modules + "/" + file + "/module.json";
+
+			if(!fs.existsSync(configFile)){
+				console.log("Skipping module folder '" + file + "' because there is no module.json file in it.");
+				return; //Not a module
+			}
+
+			var config = require(configFile);
+			if(config.disabled !== true){
+				if(typeof(config.main) === "string"){
+					var Mod = require(framework.config.modules + "/" + file + "/" + config.main);
+					framework.modules[file] = new Mod();
+				} else {
+					framework.modules[file] = new EmptyModule();
+				}
+
 				framework.modules[file].config = config;
 				framework.modules[file].initialized = false;
 				framework.modules[file].moduleName = file;
@@ -145,3 +157,22 @@ var app = connect()
 	});
 	
 eve.emit("server_created");
+
+if (typeof String.prototype.startsWith != 'function') {
+  // see below for better implementation!
+  String.prototype.startsWith = function (str){
+    return this.indexOf(str) == 0;
+  };
+}
+
+var EmptyModule = function () {
+};
+
+EmptyModule.prototype.init = function(fw, onFinished) {
+    this.fw = fw;
+	onFinished.call(this);
+}
+
+EmptyModule.prototype.onMessage = function (req, callback) {
+	callback({error: "No handler for this module"});
+};
