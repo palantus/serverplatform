@@ -28,6 +28,60 @@ $.get("/request?module=integration&type=sheetsquery&sheet=DOCUMENT_KEY&query=SEL
 {module: "integration", type: "sheetsquery", sheet: "DOCUMENT_KEY", query: "SELECT B WHERE A='20140716'"}
 ```
 
+
+
+
+
+
+
+### Handling module callback ###
+
+```
+#!javascript
+var IntegrationModule = function () {
+};
+
+IntegrationModule.prototype.init = function(fw, onFinished) {
+    this.fw = fw;
+	onFinished.call(this);
+}
+
+IntegrationModule.prototype.onMessage = function (req, callback) {
+	switch(req.body.type){
+		case "sheetsquery" :
+
+			if(typeof(req.body.sheet) !== "string" || typeof(req.body.query) !== "string"){
+				callback({error: "Invalid sheet request"});
+				return;
+			}
+			// ...
+			break;
+		case "sheetsupdate" :
+			if(typeof(req.body.sheet) !== "string" || isNaN(req.body.row) || isNaN(req.body.col) || req.body.value === undefined){
+				callback({error: "Invalid sheet update request"});
+				return;
+			}
+			// ...
+			break;
+	}
+};
+ 
+module.exports = IntegrationModule;
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ### Configuration file ###
 The configuration file can be placed under the current folder or the parent folder and must be named config.json. The following is a sample configuration file:
 
