@@ -16,7 +16,7 @@ var configFile = fs.existsSync("./config.json") ? "./config.json"
 					: null;
 
 if(configFile === null)
-	console.log("Did not find a config.json file. Will use default configuration.");
+	console.log("Could not find a config.json file. Will use default configuration.");
 
 var Framework = function(){
 	this.modules = {};
@@ -55,6 +55,12 @@ function loadNextModule(){
 }
 
 eve.on('server_created',function(){
+	if(!fs.existsSync(framework.config.modules)){
+		console.log("Modules directory could not be found.");
+		eve.emit("modules_loaded");
+		return;
+	}
+
 	// Load modules:
 	fs.readdir(framework.config.modules + '/',function(err,files){
 		if(err) throw err;
@@ -107,20 +113,16 @@ var bodyParser = require('body-parser')
 var url = require('url');
 
 var app = connect()
-	//.use(connect.staticCache())
 	.use("/fw", static(framework.config.www))
-	//.use(connect.query())
 	.use(bodyParser.urlencoded({ extended: false }))
 	.use(bodyParser.json())
 	.use("/request", function(req, res){
 		var url_parts = url.parse(req.url, true);
 		req.query = url_parts.query;
 
-		console.log(req.query);
-
 		if(typeof(req.query) === "object" && Object.getOwnPropertyNames(req.body).length < 1)
 			req.body = req.query;
-
+		
 		if(req.body !== undefined){
 			if(typeof(req.body.module) === "string"){
 				if(framework.modules[req.body.module] !== undefined){
@@ -130,14 +132,14 @@ var app = connect()
 					}, res)
 				} else {
 					res.writeHead(200, {'Content-Type':'application/json'});
-					res.end(JSON.stringify({error: "Invalid request"}));
+					res.end(JSON.stringify({error: "Unknown module '" + req.body.module + "'"}));
 				}
 			} else {
-				res.end("Invalid request! Module not provided");
+				res.end(JSON.stringify({error: "Invalid request! Module not provided"}));
 				console.log(req.body);
 			}
 		} else {
-			res.end("Invalid request! Body undefined.");
+			res.end(JSON.stringify({error: "Invalid request! Body undefined."}));
 			console.log(req);
 		}
 	});

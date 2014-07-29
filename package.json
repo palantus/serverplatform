@@ -1,5 +1,5 @@
 {
-	"name": "ServerPlatform",
+	"name": "ahk-serverplatform",
 	"version": "1.0.0",
 	"scripts": {
 		"install-windows-service": "winser -i",
