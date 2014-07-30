@@ -127,8 +127,11 @@ var url = require('url');
 var app = connect()
 	.use("/fw", static(framework.config.www))
 	//.use(bodyParser.urlencoded({ extended: false }))
-	.use(bodyParser.json({ extended: false }))
+	.use(bodyParser.json({ extended: true }))
 	.use("/request", function(req, res){
+
+		//console.log(req.body);
+
 		var url_parts = url.parse(req.url, true);
 		req.query = url_parts.query;
 
@@ -148,7 +151,6 @@ var app = connect()
 				}
 			} else {
 				res.end(JSON.stringify({error: "Invalid request! Module not provided"}));
-				console.log(req.body);
 			}
 		} else {
 			res.end(JSON.stringify({error: "Invalid request! Body undefined."}));
