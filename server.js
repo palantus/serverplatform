@@ -126,8 +126,8 @@ var url = require('url');
 
 var app = connect()
 	.use("/fw", static(framework.config.www))
-	.use(bodyParser.urlencoded({ extended: false }))
-	.use(bodyParser.json())
+	//.use(bodyParser.urlencoded({ extended: false }))
+	.use(bodyParser.json({ extended: false }))
 	.use("/request", function(req, res){
 		var url_parts = url.parse(req.url, true);
 		req.query = url_parts.query;
