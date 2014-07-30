@@ -1,13 +1,7 @@
 # ServerPlatform #
 
-### Required modules: ###
-* connect
-* crypto
-* moment
-* events
-* body-parser
-* serve-static
-* url
+[![Gittip](https://img.shields.io/gittip/palantus.svg)](https://www.gittip.com/palantus/)
+
 
 ## Server modules API ##
 
