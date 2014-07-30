@@ -1,1 +1,1 @@
-forever start -l forever.log -o out.log -err.log server.js
+forever -a start -l forever.log -o out.log -err.log server.js
