@@ -2,6 +2,7 @@
 var moment = require("moment");
 var connect = require("connect");
 var fs = require('fs');
+var https = require('https');
 
 EventEmitter = require('events').EventEmitter;
 var eve = new EventEmitter();
@@ -112,7 +113,21 @@ eve.on('server_started',function(){
 });
 
 function startServer(){
+	
+	if(framework.config.enableSSL == true && !isNaN(framework.config.SSLPort)){
+		var options = {
+		  key: fs.readFileSync(framework.config.SSLKey),
+		  cert: fs.readFileSync(framework.config.SSLCert),
+		  ca: fs.readFileSync(framework.config.SSLCa),
+		  requestCert: true,
+		  rejectUnauthorized: false
+		};
+
+		https.createServer(options,app).listen(framework.config.SSLPort);
+	}
+	
 	app.listen(process.env.port || framework.config.port || 3000);
+
 	eve.emit("server_started");
 	
 	for(moduleName in framework.modules)
