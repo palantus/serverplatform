@@ -12,6 +12,7 @@
 		"events" : "*",
 		"body-parser" : "*",
 		"serve-static" : "*",
-		"url" : "*"
+		"url" : "*",
+		"connect-redirection" : "*"
 	}
 }

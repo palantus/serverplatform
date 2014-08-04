@@ -3,6 +3,7 @@ var moment = require("moment");
 var connect = require("connect");
 var fs = require('fs');
 var https = require('https');
+var redirect = require('connect-redirection');
 
 EventEmitter = require('events').EventEmitter;
 var eve = new EventEmitter();
@@ -140,6 +141,13 @@ var bodyParser = require('body-parser')
 var url = require('url');
 
 var app = connect()
+	.use(redirect())
+	.use(function(req, res, next) {
+		if(!req.secure && framework.config.AutoSSLRedirection == true) {
+			return res.redirect(['https://', req.headers['host'], req.url].join(''));
+		}
+		next();
+	})
 	.use("/fw", static(framework.config.www))
 	//.use(bodyParser.urlencoded({ extended: false }))
 	.use(bodyParser.json({ extended: true }))
