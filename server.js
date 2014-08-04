@@ -47,6 +47,8 @@ function loadNextModule(){
 				framework.modules[key].init(framework, function(){
 					this.initialized = true;
 					app.use("/" + this.moduleName, static(framework.config.modules + "/" + this.moduleName + "/www"));
+					if(secApp != null)
+						secApp.use("/" + this.moduleName, static(framework.config.modules + "/" + this.moduleName + "/www"));
 					loadNextModule();
 				});
 				return;
@@ -99,6 +101,8 @@ eve.on('server_created',function(){
 
 eve.on('modules_loaded',function(){
 	app.use(static(framework.config.www)) //Must be last option
+	if(secApp != null)
+		secApp.use(static(framework.config.www)) //Must be last option
 
 	for(moduleName in framework.modules){
 		if(typeof(framework.modules[moduleName].handlePreStart) === "function"){
@@ -115,6 +119,7 @@ eve.on('server_started',function(){
 
 function startServer(){
 	
+	/* Secure server */
 	if(framework.config.enableSSL == true && !isNaN(framework.config.SSLPort)){
 		var options = {
 		  key: fs.readFileSync(framework.config.SSLKey),
@@ -124,9 +129,11 @@ function startServer(){
 		  rejectUnauthorized: false
 		};
 
-		https.createServer(options,app).listen(framework.config.SSLPort);
+		https.createServer(options,secApp).listen(framework.config.SSLPort);
 	}
 	
+	/* Insecure server */
+
 	app.listen(process.env.port || framework.config.port || 3000);
 
 	eve.emit("server_started");
@@ -140,47 +147,54 @@ var static = require('serve-static')
 var bodyParser = require('body-parser')
 var url = require('url');
 
-var app = connect()
-	.use(redirect())
-	.use(function(req, res, next) {
-		if(!req.secure && framework.config.AutoSSLRedirection == true) {
-			return res.redirect(['https://', req.headers['host'], req.url].join(''));
-		}
-		next();
-	})
-	.use("/fw", static(framework.config.www))
-	//.use(bodyParser.urlencoded({ extended: false }))
-	.use(bodyParser.json({ extended: true }))
-	.use("/request", function(req, res){
+function handleCallback(req, res){
+	var url_parts = url.parse(req.url, true);
+	req.query = url_parts.query;
 
-		//console.log(req.body);
-
-		var url_parts = url.parse(req.url, true);
-		req.query = url_parts.query;
-
-		if(typeof(req.query) === "object" && Object.getOwnPropertyNames(req.body).length < 1)
-			req.body = req.query;
-		
-		if(req.body !== undefined){
-			if(typeof(req.body.module) === "string"){
-				if(framework.modules[req.body.module] !== undefined){
-					framework.modules[req.body.module].onMessage(req, function(response){
-						res.writeHead(200, {'Content-Type':'application/json'});
-						res.end(JSON.stringify(response));
-					}, res)
-				} else {
+	if(typeof(req.query) === "object" && Object.getOwnPropertyNames(req.body).length < 1)
+		req.body = req.query;
+	
+	if(req.body !== undefined){
+		if(typeof(req.body.module) === "string"){
+			if(framework.modules[req.body.module] !== undefined){
+				framework.modules[req.body.module].onMessage(req, function(response){
 					res.writeHead(200, {'Content-Type':'application/json'});
-					res.end(JSON.stringify({error: "Unknown module '" + req.body.module + "'"}));
-				}
+					res.end(JSON.stringify(response));
+				}, res)
 			} else {
-				res.end(JSON.stringify({error: "Invalid request! Module not provided"}));
+				res.writeHead(200, {'Content-Type':'application/json'});
+				res.end(JSON.stringify({error: "Unknown module '" + req.body.module + "'"}));
 			}
 		} else {
-			res.end(JSON.stringify({error: "Invalid request! Body undefined."}));
-			console.log(req);
+			res.end(JSON.stringify({error: "Invalid request! Module not provided"}));
 		}
-	});
-	
+	} else {
+		res.end(JSON.stringify({error: "Invalid request! Body undefined."}));
+		console.log(req);
+	}
+}
+var app = connect()
+			.use(redirect())
+			.use(function(req, res, next) {
+				if(!req.secure && framework.config.AutoSSLRedirection == true) {
+					return res.redirect(['https://', req.headers['host'], req.url].join(''));
+				}
+				next();
+			})
+			.use("/fw", static(framework.config.www))
+			.use(bodyParser.json({ extended: true }))
+			.use("/request", handleCallback);	
+
+var secApp = null;
+if(framework.config.enableSSL)
+{
+	var secApp = connect()
+				.use(redirect())
+				.use("/fw", static(framework.config.www))
+				.use(bodyParser.json({ extended: true }))
+				.use("/request", handleCallback);	
+}
+
 eve.emit("server_created");
 
 if (typeof String.prototype.startsWith != 'function') {
