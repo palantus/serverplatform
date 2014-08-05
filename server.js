@@ -175,7 +175,7 @@ function handleCallback(req, res){
 }
 var app = connect()
 			.use(redirect())
-			.use(function(req, res, next) {
+			.use("/", function(req, res, next) {
 				if(!req.secure && framework.config.AutoSSLRedirection == true) {
 					return res.redirect(['https://', req.headers['host'], req.url].join(''));
 				}
@@ -188,7 +188,7 @@ var app = connect()
 var secApp = null;
 if(framework.config.enableSSL)
 {
-	var secApp = connect()
+	secApp = connect()
 				.use(redirect())
 				.use("/fw", static(framework.config.www))
 				.use(bodyParser.json({ extended: true }))
