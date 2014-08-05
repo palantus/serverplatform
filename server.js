@@ -176,7 +176,7 @@ function handleCallback(req, res){
 var app = connect()
 			.use(redirect())
 			.use(function(req, res, next) {
-				if(!req.secure && !req.url.startsWith("/request") && !req.url.endsWith(".appcache") && framework.config.AutoSSLRedirection == true) {
+				if(!req.secure && req.url == "/" && framework.config.AutoSSLRedirection == true) {
 					return res.redirect(['https://', req.headers['host'], req.url].join(''));
 				}
 				next();
