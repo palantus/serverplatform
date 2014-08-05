@@ -176,7 +176,7 @@ function handleCallback(req, res){
 var app = connect()
 			.use(redirect())
 			.use(function(req, res, next) {
-				if(!req.secure && !req.url.startsWith("/request") && framework.config.AutoSSLRedirection == true) {
+				if(!req.secure && !req.url.startsWith("/request") && !req.url.endsWith(".appcache") && framework.config.AutoSSLRedirection == true) {
 					return res.redirect(['https://', req.headers['host'], req.url].join(''));
 				}
 				next();
@@ -201,6 +201,12 @@ if (typeof String.prototype.startsWith != 'function') {
   String.prototype.startsWith = function (str){
     return this.indexOf(str) == 0;
   };
+}
+
+if (typeof String.prototype.endsWith != 'function') {
+	String.prototype.endsWith = function(suffix) {
+	    return this.indexOf(suffix, this.length - suffix.length) !== -1;
+	};
 }
 
 var EmptyModule = function () {
