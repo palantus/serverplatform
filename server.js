@@ -175,8 +175,8 @@ function handleCallback(req, res){
 }
 var app = connect()
 			.use(redirect())
-			.use("/", function(req, res, next) {
-				if(!req.secure && framework.config.AutoSSLRedirection == true) {
+			.use(function(req, res, next) {
+				if(!req.secure && !req.url.startsWith("/request") && framework.config.AutoSSLRedirection == true) {
 					return res.redirect(['https://', req.headers['host'], req.url].join(''));
 				}
 				next();
@@ -189,7 +189,6 @@ var secApp = null;
 if(framework.config.enableSSL)
 {
 	secApp = connect()
-				.use(redirect())
 				.use("/fw", static(framework.config.www))
 				.use(bodyParser.json({ extended: true }))
 				.use("/request", handleCallback);	
